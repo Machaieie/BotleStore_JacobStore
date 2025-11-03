@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jacob's Bar - Sistema de Gestão</title>
+  <link rel="stylesheet" href="bootstrap-5.0.2-dist/css/bootstrap.min.css">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: row;
+      overflow-x: hidden;
+    }
+
+    .sidebar {
+      background-color: #f8f9fa;
+      width: 250px;
+      height: 100vh;
+      border-right: 1px solid #dee2e6;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      position: fixed;
+      left: 0;
+      top: 0;
+    }
+
+    .profile-section {
+      text-align: center;
+      padding: 30px 10px;
+      border-bottom: 1px solid #dee2e6;
+    }
+
+    .profile-section img {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      border: 2px solid #ced4da;
+      object-fit: cover;
+    }
+
+    .profile-section h6 {
+      margin-top: 10px;
+      margin-bottom: 0;
+    }
+
+    .profile-section small {
+      color: #6c757d;
+    }
+
+    .menu-section {
+      flex-grow: 1;
+      padding-top: 20px;
+    }
+
+    .menu-section .nav-link {
+      color: #000;
+      padding: 10px 25px;
+      display: block;
+      transition: 0.3s;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .menu-section .nav-link:hover,
+    .menu-section .nav-link.active {
+      background-color: #e9ecef;
+      border-radius: 8px;
+    }
+
+    .notif-icon {
+      position: absolute;
+      right: 25px;
+      top: 12px;
+      color: red;
+      display: none;
+    }
+
+    .logout-section {
+      padding: 20px;
+      border-top: 1px solid #dee2e6;
+    }
+
+    .logout-section button {
+      width: 100%;
+    }
+
+    .content {
+      flex: 1;
+      margin-left: 250px;
+      padding: 30px;
+    }
+
+    @media (max-width: 992px) {
+      .sidebar {
+        display: none;
+      }
+
+      .content {
+        margin-left: 0;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div>
+      <div class="profile-section">
+        <img src="perfil.png" alt="Foto do usuário">
+        <h6>Jacob's Bar</h6>
+        <small>Administrador</small>
+      </div>
+
+      <div class="menu-section">
+        <a class="nav-link active" onclick="mostrarTela('dashboard')">Dashboard</a>
+        <a class="nav-link" onclick="mostrarTela('vendas')">Vendas</a>
+        <a class="nav-link" onclick="mostrarTela('estoque')">Estoque
+          <span id="notifEstoque" class="notif-icon">🔔</span>
+        </a>
+        <a class="nav-link" onclick="mostrarTela('configuracoes')">Configurações</a>
+      </div>
+    </div>
+
+    <div class="logout-section">
+      <button class="btn btn-primary btn-sm text-white">Logout</button>
+    </div>
+  </div>
+
+  <!-- Conteúdo principal -->
+  <div class="content">
+    <!-- Dashboard -->
+    <div id="dashboard" class="tela">
+      <h3>📊 Dashboard</h3>
+      <p>Resumo geral das operações do bar.</p>
+    </div>
+
+    <!-- Vendas -->
+    <div id="vendas" class="tela d-none">
+      <h3>💰 Vendas</h3>
+      <p>Registre e acompanhe as vendas do bar.</p>
+
+      <div class="mb-3 position-relative">
+        <label for="produtoBusca" class="form-label">Buscar Produto</label>
+        <input type="text" id="produtoBusca" class="form-control" placeholder="Digite o nome do produto...">
+        <div id="listaSugestoes" class="list-group position-absolute w-50 mt-1"></div>
+      </div>
+
+      <div class="table-responsive mt-4">
+        <table class="table table-bordered align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Produto</th>
+              <th>Preço (MT)</th>
+              <th>Qtd</th>
+              <th>Total (MT)</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="tabelaProdutos"></tbody>
+        </table>
+      </div>
+
+      <div class="d-flex justify-content-between align-items-center mt-3">
+        <h5>Total: <span id="totalVenda">0</span> MT</h5>
+        <button class="btn btn-success" id="btnPagar" disabled data-bs-toggle="modal"
+          data-bs-target="#modalPagamento">
+          Processar Pagamento
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal de Pagamento -->
+    <div class="modal fade" id="modalPagamento" tabindex="-1" aria-labelledby="modalPagamentoLabel"
+      aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="modalPagamentoLabel">Processar Pagamento</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <label class="form-label">Método de Pagamento</label>
+            <select class="form-select" id="metodoPagamento">
+              <option value="">Selecione...</option>
+              <option value="dinheiro">💵 Dinheiro</option>
+              <option value="cartao">💳 Cartão</option>
+              <option value="mpesa">📱 M-Pesa</option>
+            </select>
+          </div>
+          <div class="modal-footer">
+            <button class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button class="btn btn-primary" id="confirmarPagamento">Confirmar Pagamento</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Estoque -->
+    <div id="estoque" class="tela d-none">
+      <h3>📦 Estoque</h3>
+      <p>Controle as entradas e saídas de bebidas.</p>
+
+      <div class="table-responsive mt-3">
+        <table class="table table-bordered align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Produto</th>
+              <th>Quantidade</th>
+              <th>Preço Unitário (MT)</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="tabelaEstoque"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Configurações -->
+    <div id="configuracoes" class="tela d-none">
+      <h3>⚙️ Configurações</h3>
+      <p>Atualize seus dados pessoais e senha.</p>
+
+      <form class="mt-3 w-50">
+        <div class="mb-3">
+          <label class="form-label">Nome</label>
+          <input type="text" class="form-control" value="Jacob's Bar">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-control" value="jacobsbar@gmail.com">
+        </div>
+        <hr>
+        <div class="mb-3">
+          <label class="form-label">Nova Senha</label>
+          <input type="password" class="form-control">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Confirmar Senha</label>
+          <input type="password" class="form-control">
+        </div>
+        <button type="button" class="btn btn-primary">Salvar Alterações</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="bootstrap-5.0.2-dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Produtos com estoque inicial
+    let produtos = [
+      { nome: "Cerveja 2M", preco: 90, qtd: 20 },
+      { nome: "Coca-Cola 1L", preco: 70, qtd: 15 },
+      { nome: "Whisky Johnnie Walker", preco: 1200, qtd: 5 },
+      { nome: "Água Mineral 500ml", preco: 40, qtd: 25 },
+      { nome: "Vinho Tinto", preco: 650, qtd: 8 },
+      { nome: "Gin Gordon’s", preco: 800, qtd: 10 },
+      { nome: "Sumo Tropical", preco: 60, qtd: 12 },
+    ];
+
+    let carrinho = [];
+
+    const tabelaProdutos = document.getElementById("tabelaProdutos");
+    const tabelaEstoque = document.getElementById("tabelaEstoque");
+    const totalVenda = document.getElementById("totalVenda");
+    const notifEstoque = document.getElementById("notifEstoque");
+
+    function mostrarTela(id) {
+      document.querySelectorAll('.tela').forEach(t => t.classList.add('d-none'));
+      document.getElementById(id).classList.remove('d-none');
+      document.querySelectorAll('.menu-section .nav-link').forEach(l => l.classList.remove('active'));
+      event.target.classList.add('active');
+      if (id === "estoque") atualizarEstoque();
+    }
+
+    const buscaInput = document.getElementById("produtoBusca");
+    const listaSugestoes = document.getElementById("listaSugestoes");
+
+    buscaInput.addEventListener("input", () => {
+      const texto = buscaInput.value.toLowerCase();
+      listaSugestoes.innerHTML = "";
+      if (!texto) return;
+      const resultados = produtos.filter(p => p.nome.toLowerCase().includes(texto) && p.qtd > 0);
+      resultados.forEach(p => {
+        const item = document.createElement("button");
+        item.classList.add("list-group-item", "list-group-item-action");
+        item.textContent = `${p.nome} - ${p.preco} MT`;
+        item.onclick = () => {
+          adicionarProduto(p);
+          listaSugestoes.innerHTML = "";
+          buscaInput.value = "";
+        };
+        listaSugestoes.appendChild(item);
+      });
+    });
+
+    function adicionarProduto(produto) {
+      const existente = carrinho.find(p => p.nome === produto.nome);
+      if (existente) existente.qtd += 1;
+      else carrinho.push({ nome: produto.nome, preco: produto.preco, qtd: 1 });
+      atualizarTabela();
+    }
+
+    function atualizarTabela() {
+      tabelaProdutos.innerHTML = "";
+      let total = 0;
+      carrinho.forEach((p, i) => {
+        const subtotal = p.qtd * p.preco;
+        total += subtotal;
+        tabelaProdutos.innerHTML += `
+          <tr>
+            <td>${p.nome}</td>
+            <td>${p.preco}</td>
+            <td><input type="number" min="1" value="${p.qtd}" class="form-control form-control-sm" onchange="alterarQtd(${i}, this.value)"></td>
+            <td>${subtotal}</td>
+            <td><button class="btn btn-sm btn-danger" onclick="removerProduto(${i})">Remover</button></td>
+          </tr>`;
+      });
+      totalVenda.textContent = total;
+      document.getElementById("btnPagar").disabled = carrinho.length === 0;
+    }
+
+    function alterarQtd(i, qtd) {
+      carrinho[i].qtd = parseInt(qtd);
+      atualizarTabela();
+    }
+
+    function removerProduto(i) {
+      carrinho.splice(i, 1);
+      atualizarTabela();
+    }
+
+    document.getElementById("confirmarPagamento").addEventListener("click", () => {
+      const metodo = document.getElementById("metodoPagamento").value;
+      if (!metodo) return alert("Selecione o método de pagamento.");
+      carrinho.forEach(item => {
+        const prod = produtos.find(p => p.nome === item.nome);
+        if (prod) prod.qtd -= item.qtd;
+      });
+      carrinho = [];
+      atualizarTabela();
+      atualizarEstoque();
+      verificarEstoqueBaixo();
+      alert("Pagamento concluído com sucesso!");
+      bootstrap.Modal.getInstance(document.getElementById("modalPagamento")).hide();
+    });
+
+    function atualizarEstoque() {
+      tabelaEstoque.innerHTML = "";
+      produtos.forEach(p => {
+        const status = p.qtd <= 5 ? `<span class='text-danger fw-bold'>Baixo</span>` : `<span class='text-success'>OK</span>`;
+        tabelaEstoque.innerHTML += `<tr><td>${p.nome}</td><td>${p.qtd}</td><td>${p.preco}</td><td>${status}</td></tr>`;
+      });
+    }
+
+    function verificarEstoqueBaixo() {
+      const baixo = produtos.some(p => p.qtd <= 5);
+      notifEstoque.style.display = baixo ? "inline" : "none";
+    }
+
+    atualizarEstoque();
+    verificarEstoqueBaixo();
+  </script>
+</body>
+
+</html>
