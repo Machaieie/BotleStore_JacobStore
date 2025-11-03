@@ -1,0 +1,31 @@
+name: 🚀 Deploy Jacob's Bar no GitHub Pages
+
+on:
+  push:
+    branches: ["main"]  # ou "master" se for o teu branch principal
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Baixar código
+        uses: actions/checkout@v4
+
+      # Se for só HTML/CSS/JS puro, não há build.
+      # Apenas copiamos o código para a pasta de deploy.
+      - name: 🔧 Preparar arquivos para deploy
+        run: |
+          mkdir public
+          cp -r * public
+
+      - name: 📤 Publicar no GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./public
